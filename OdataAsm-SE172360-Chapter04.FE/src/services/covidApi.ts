@@ -111,5 +111,35 @@ export const covidApi = {
       country,
       count
     }));
+  },
+
+  async getCountrySpecificData(country: string, type: 'confirmed' | 'deaths' | 'recovered'): Promise<CovidRecord[]> {
+    // Validate country parameter
+    if (!country || typeof country !== 'string') {
+      throw new Error('Country name is required and must be a string');
+    }
+
+    let endpoint = '';
+    switch (type) {
+      case 'confirmed':
+        endpoint = 'CovidConfirmed';
+        break;
+      case 'deaths':
+        endpoint = 'CovidDeaths';
+        break;
+      case 'recovered':
+        endpoint = 'CovidRecovered';
+        break;
+    }
+
+    const url = buildODataUrl(endpoint, {
+      'filter': `Country eq '${country.replace(/'/g, "''")}'`, // Escape single quotes for OData
+      'select': 'Country,Province,Date,Value,Count',
+      'orderby': 'Date desc',
+      'top': '1000'
+    });
+    
+    const response = await axios.get(url);
+    return response.data.value as CovidRecord[];
   }
 };

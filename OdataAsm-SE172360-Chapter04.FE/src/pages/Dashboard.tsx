@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { TabNavigation } from '../components/TabNavigation';
 import { WorldMapSimple } from '../components/WorldMapSimple';
 import { DataPreview } from '../components/DataPreview';
-import type { CovidDataType, CountryData } from '../types/covid';
+import type { CovidDataType, CountryData, CovidRecord } from '../types/covid';
+import { covidApi } from '../services/covidApi';
 import axios from 'axios';
 import './Dashboard.css';
 
@@ -50,6 +51,8 @@ export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewRows, setPreviewRows] = useState<any[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [countrySpecificData, setCountrySpecificData] = useState<CovidRecord[]>([]);
 
   const fetchData = async (tab: CovidDataType) => {
     setLoading(true);
@@ -139,8 +142,53 @@ export const Dashboard: React.FC = () => {
     }
   };
 
+  const handleCountryClick = async (countryName: string) => {
+    // Validate country name
+    if (!countryName || typeof countryName !== 'string') {
+      console.error('Invalid country name provided:', countryName);
+      setError('Invalid country selected. Please try clicking on a different country.');
+      return;
+    }
+
+    console.log(`Fetching ${activeTab} data for ${countryName}...`);
+    setSelectedCountry(countryName);
+    setError(null);
+    
+    try {
+      // Convert activeTab to the proper type for API call
+      let dataType: 'confirmed' | 'deaths' | 'recovered' = 'confirmed';
+      if (activeTab === 'Deaths') {
+        dataType = 'deaths';
+      } else if (activeTab === 'Recovered') {
+        dataType = 'recovered';
+      }
+      
+      const data = await covidApi.getCountrySpecificData(countryName, dataType);
+      setCountrySpecificData(data);
+      
+      // Also update preview rows to show country-specific data
+      setPreviewRows(data.slice(0, 50));
+      
+      console.log(`Found ${data.length} records for ${countryName}`);
+    } catch (err: any) {
+      let errorMessage = `Failed to fetch data for ${countryName}`;
+      
+      if (err?.response?.status) {
+        errorMessage += ` Server returned ${err.response.status}.`;
+      } else if (err?.message) {
+        errorMessage += `. ${err.message}`;
+      }
+      
+      setError(errorMessage);
+      console.error('Error fetching country data:', err);
+    }
+  };
+
   useEffect(() => {
     fetchData(activeTab);
+    // Clear country selection when changing tabs
+    setSelectedCountry(null);
+    setCountrySpecificData([]);
   }, [activeTab]);
 
   const handleTabChange = (tab: CovidDataType) => {
@@ -168,8 +216,27 @@ export const Dashboard: React.FC = () => {
           </div>
         ) : (
           <>
-            <WorldMapSimple data={mapData} type={activeTab} />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+            <WorldMapSimple 
+              data={mapData} 
+              type={activeTab} 
+              onCountryClick={handleCountryClick}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+              {selectedCountry && (
+                <div style={{ fontWeight: 'bold', color: '#007bff' }}>
+                  Showing data for: {selectedCountry}
+                  <button 
+                    onClick={() => {
+                      setSelectedCountry(null);
+                      setCountrySpecificData([]);
+                      setPreviewRows(mapData.slice(0, 50));
+                    }}
+                    style={{ marginLeft: 10, padding: '4px 8px', fontSize: '12px' }}
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
               <button onClick={handlePreviewTop50} className="tab-button">Preview top 50</button>
             </div>
             <DataPreview rows={previewRows as any} />

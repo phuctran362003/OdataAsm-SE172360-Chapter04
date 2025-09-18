@@ -6,9 +6,10 @@ import type { CountryData } from '../types/covid';
 interface WorldMapProps {
   data: CountryData[];
   type: string;
+  onCountryClick?: (country: string) => void;
 }
 
-export const WorldMapSimple: React.FC<WorldMapProps> = ({ data, type }) => {
+export const WorldMapSimple: React.FC<WorldMapProps> = ({ data, type, onCountryClick }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mapData, setMapData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -100,7 +101,7 @@ export const WorldMapSimple: React.FC<WorldMapProps> = ({ data, type }) => {
         .attr("class", "country")
         .attr("d", path as any)
         .attr("fill", (d: any) => {
-          const countryName = d.properties.NAME?.toLowerCase().trim();
+          const countryName = (d?.properties?.NAME || d?.properties?.name || d?.properties?.NAME_EN || '')?.toLowerCase().trim();
           const value = dataMap.get(countryName) || 0;
           return value > 0 ? colorScale(value) : "#f0f0f0";
         })
@@ -108,7 +109,7 @@ export const WorldMapSimple: React.FC<WorldMapProps> = ({ data, type }) => {
         .attr("stroke-width", 0.5)
         .style("cursor", "pointer")
         .on("mouseover", function(event: any, d: any) {
-          const countryName = d.properties.NAME;
+          const countryName = d?.properties?.NAME || d?.properties?.name || d?.properties?.NAME_EN || 'Unknown Country';
           const value = dataMap.get(countryName?.toLowerCase().trim()) || 0;
           
           // Simple tooltip
@@ -131,6 +132,17 @@ export const WorldMapSimple: React.FC<WorldMapProps> = ({ data, type }) => {
         .on("mouseout", function() {
           d3.selectAll(".map-tooltip").remove();
           d3.select(this).attr("stroke-width", 0.5);
+        })
+        .on("click", function(_event: any, d: any) {
+          if (onCountryClick) {
+            const countryName = d?.properties?.NAME || d?.properties?.name || d?.properties?.NAME_EN;
+            if (countryName && typeof countryName === 'string') {
+              console.log("Country clicked:", countryName);
+              onCountryClick(countryName);
+            } else {
+              console.warn("Country clicked but no valid name found:", d?.properties);
+            }
+          }
         });
 
       console.log("Map rendered successfully with", countries.features.length, "countries");
