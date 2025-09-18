@@ -11,50 +11,56 @@ using SwaggerThemes;
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
-// JSON + OData config
+// OData + JSON config
 builder.Services.AddControllers()
     .AddOData(opt =>
     {
         var edmBuilder = new ODataConventionModelBuilder();
-        edmBuilder.EntitySet<CovidRecord>("CovidRecords");
+        edmBuilder.EntitySet<CovidRecord>("CovidConfirmed");
+        edmBuilder.EntitySet<CovidRecord>("CovidDeaths");
+        edmBuilder.EntitySet<CovidRecord>("CovidRecovered");
+
         opt.AddRouteComponents("odata", edmBuilder.GetEdmModel())
             .Filter()
             .Select()
             .OrderBy()
             .Expand()
             .Count()
-            .SetMaxTop(100000); // cho phép dùng $top tối đa 1000
+            .SetMaxTop(100000);
     })
     .AddJsonOptions(options =>
     {
+        // serialize enum as string
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(p => p.AddPolicy("AllowAll", b => b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 
-// CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll",
-        policy =>
-        {
-            policy.AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader();
-        });
-});
+// Wrapper providers so DI can distinguish datasets
+builder.Services.AddSingleton<ConfirmedProvider>();
+builder.Services.AddSingleton<DeathsProvider>();
+builder.Services.AddSingleton<RecoveredProvider>();
 
-// Load CSV từ GitHub Raw
-var rawUrl = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv";
-var covidData = await LoadCovidDataAsync(rawUrl);
-builder.Services.AddSingleton<IEnumerable<CovidRecord>>(covidData);
+// Load datasets (async startup)
+var confirmedUrl = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv";
+var deathsUrl    = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv";
+var recoveredUrl = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv";
 
+
+// sau khi load dữ liệu
+var confirmedData = await LoadCovidDataAsync(confirmedUrl, CovidValue.Confirmed);
+var deathsData    = await LoadCovidDataAsync(deathsUrl, CovidValue.Deaths);
+var recoveredData = await LoadCovidDataAsync(recoveredUrl, CovidValue.Recovered);
+// đăng ký providers bằng instance có sẵn dữ liệu
+builder.Services.AddSingleton(new ConfirmedProvider { Data = confirmedData });
+builder.Services.AddSingleton(new DeathsProvider    { Data = deathsData });
+builder.Services.AddSingleton(new RecoveredProvider { Data = recoveredData });
 var app = builder.Build();
 
-// Swagger
+// Swagger UI in development
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -73,11 +79,9 @@ app.UseSwagger();
 app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
-
 app.Run();
 
-// Helper
-static async Task<List<CovidRecord>> LoadCovidDataAsync(string url)
+static async Task<List<CovidRecord>> LoadCovidDataAsync(string url, CovidValue metric)
 {
     using var http = new HttpClient();
     var csvData = await http.GetStringAsync(url);
@@ -91,19 +95,28 @@ static async Task<List<CovidRecord>> LoadCovidDataAsync(string url)
     foreach (var row in table)
     {
         var dict = (IDictionary<string, object>)row;
-        var country = dict["Country/Region"]?.ToString();
-        var province = dict["Province/State"]?.ToString();
+        var country = dict.ContainsKey("Country/Region") ? dict["Country/Region"]?.ToString() : dict["Country"]?.ToString();
+        var province = dict.ContainsKey("Province/State") ? dict["Province/State"]?.ToString() : dict["Province"]?.ToString();
 
         foreach (var key in dict.Keys.Where(k => DateTime.TryParse(k, out _)))
         {
+            var countString = dict[key]?.ToString() ?? "0";
+            if (!int.TryParse(countString, out var count)) count = 0;
+
             list.Add(new CovidRecord
             {
                 Country = country,
                 Province = province,
                 Date = DateTime.Parse(key),
-                Confirmed = int.Parse(dict[key]?.ToString() ?? "0")
+                Value = metric,
+                Count = count
             });
         }
     }
     return list;
 }
+
+// simple provider wrappers for DI
+public class ConfirmedProvider { public IEnumerable<CovidRecord> Data { get; set; } = Array.Empty<CovidRecord>(); }
+public class DeathsProvider    { public IEnumerable<CovidRecord> Data { get; set; } = Array.Empty<CovidRecord>(); }
+public class RecoveredProvider { public IEnumerable<CovidRecord> Data { get; set; } = Array.Empty<CovidRecord>(); }
