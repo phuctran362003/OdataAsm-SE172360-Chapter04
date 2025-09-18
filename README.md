@@ -1,5 +1,7 @@
 # OdataAsm-SE172360-Chapter04
 
+![Project Screenshot](https://scontent.fsgn19-1.fna.fbcdn.net/v/t1.15752-9/550456021_1936539360462467_7717169300510669184_n.png?_nc_cat=100&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeG4WcsnYiS8QxUbLvWhyXiQg2YDqXnv-G6DZgOpee_4bneUNUiy0dqrYhS4V8Ps5WjtqDj__AaQ-O2gN_1lCe9q&_nc_ohc=WPRPYPwKZCEQ7kNvwHI9lQC&_nc_oc=AdnVEpkPnRCT7x66h3FhIQScTx9xlJSPTpk32H6jpxRQcV6ZI3fCOo5AEGzCvNZ0yeM&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&oh=03_Q7cD3QG8zDWMYaUSsTg70zkBCdigZgI9o8dWMAuu30OJBgyB-Q&oe=68F350E1)
+
 This repository contains a project for exposing COVID-19 data through an OData API using .NET.
 
 ## Overview
