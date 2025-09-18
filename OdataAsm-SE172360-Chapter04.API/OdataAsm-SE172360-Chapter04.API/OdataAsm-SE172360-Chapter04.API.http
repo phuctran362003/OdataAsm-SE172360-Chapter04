@@ -1,0 +1,6 @@
+@OdataAsm_SE172360_Chapter04.API_HostAddress = http://localhost:5193
+
+GET {{OdataAsm_SE172360_Chapter04.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

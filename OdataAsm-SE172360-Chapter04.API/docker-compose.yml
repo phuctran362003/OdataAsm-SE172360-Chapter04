@@ -1,0 +1,6 @@
+services:
+  odataasm-se172360-chapter04.api:
+    image: ${DOCKER_REGISTRY-}odataasmse172360chapter04api
+    build:
+      context: .
+      dockerfile: OdataAsm-SE172360-Chapter04.API/Dockerfile
