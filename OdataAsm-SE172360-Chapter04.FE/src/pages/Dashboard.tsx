@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TabNavigation } from '../components/TabNavigation';
 import { WorldMapSimple } from '../components/WorldMapSimple';
+import { CovidTreemap } from '../components/CovidTreemap';
 import { DataPreview } from '../components/DataPreview';
 import type { CovidDataType, CountryData, CovidRecord } from '../types/covid';
 import { covidApi } from '../services/covidApi';
@@ -219,6 +220,11 @@ export const Dashboard: React.FC = () => {
             <WorldMapSimple 
               data={mapData} 
               type={activeTab} 
+              onCountryClick={handleCountryClick}
+            />
+            <CovidTreemap 
+              data={mapData} 
+              type={activeTab}
               onCountryClick={handleCountryClick}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
