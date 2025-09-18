@@ -1,0 +1,66 @@
+.dashboard {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.dashboard-content {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .dashboard {
+    padding: 2rem;
+  }
+  
+  .dashboard-header {
+    margin-bottom: 3rem;
+  }
+  
+  .dashboard-header h1 {
+    font-size: 2.5rem;
+  }
+  
+  .dashboard-content {
+    padding: 2rem;
+  }
+}
+
+.loading-message,
+.error-message {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.1rem;
+}
+
+.loading-message {
+  color: #666;
+}
+
+.error-message {
+  color: #dc3545;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}

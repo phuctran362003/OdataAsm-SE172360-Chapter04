@@ -1,0 +1,7 @@
+.preview { margin-top: 16px; }
+.preview-header { font-weight: 600; margin-bottom: 8px; }
+.preview-table-wrapper { max-height: 260px; overflow: auto; border: 1px solid #eee; border-radius: 6px; }
+.preview-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.preview-table th, .preview-table td { padding: 8px 10px; border-bottom: 1px solid #f1f1f1; }
+.preview-table thead th { position: sticky; top: 0; background: #fafafa; z-index: 1; }
+.preview-table tr:nth-child(even) { background: #fcfcfc; }

@@ -1,0 +1,44 @@
+.world-map-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+  padding: 20px;
+  width: calc(100% - 40px); /* Account for padding */
+  max-width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.world-map {
+  background-color: white;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+.country {
+  cursor: pointer;
+  transition: stroke-width 0.2s ease;
+}
+
+.country:hover {
+  stroke-width: 2px !important;
+}
+
+/* Tooltip styles */
+.tooltip {
+  position: absolute;
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border-radius: 4px;
+  pointer-events: none;
+  line-height: 1.4;
+}
